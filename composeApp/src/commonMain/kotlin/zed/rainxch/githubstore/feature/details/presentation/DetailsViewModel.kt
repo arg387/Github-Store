@@ -189,15 +189,12 @@ class DetailsViewModel(
             try {
                 appendLog(assetName, sizeBytes, releaseTag, "DownloadStarted")
                 _state.value = _state.value.copy(
-                    downloadStage = DownloadStage.PREPARING,
                     downloadError = null,
                     installError = null,
                     downloadProgressPercent = null
                 )
 
-                // Preparing: Real work + optional delay for UX
                 installer.ensurePermissionsOrThrow(assetName.substringAfterLast('.', "").lowercase())  // Early check
-                delay(1000L)  // Min delay for "preparing" feel; adjust 1-2s
 
                 _state.value = _state.value.copy(downloadStage = DownloadStage.DOWNLOADING)
 

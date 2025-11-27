@@ -2,12 +2,14 @@ package zed.rainxch.githubstore.feature.details.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,47 +49,78 @@ fun SmartInstallButton(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(CircleShape)
+            .background(
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.primary
+                } else MaterialTheme.colorScheme.surfaceContainer,
+                shape = CircleShape
+            )
             .clickable(enabled = enabled, onClick = onClick),
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (enabled) {
                 MaterialTheme.colorScheme.primary
             } else MaterialTheme.colorScheme.surfaceContainer
-        )
+        ),
+        shape = CircleShape
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            if (state.isDownloading || state.downloadStage != DownloadStage.IDLE) {  // Fallback for compat
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (state.isDownloading || state.downloadStage != DownloadStage.IDLE) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     when (state.downloadStage) {
-                        DownloadStage.PREPARING -> {
-                            CircularProgressIndicator(/* small */)
-                            Text("Preparing...")
-                        }
-
                         DownloadStage.DOWNLOADING -> {
-                            LinearProgressIndicator(
-                                progress = { animatedProgress },
-                                color = MaterialTheme.colorScheme.surfaceContainer
-                            )
-                            Text("Downloading... ${progress ?: 0}%")
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LinearProgressIndicator(
+                                    progress = { animatedProgress },
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+
+                                Text(
+                                    text = "Downloading... ${progress ?: 0}%",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
 
                         DownloadStage.VERIFYING -> {
-                            CircularProgressIndicator(/* small */)
-                            Text("Verifying app...")
+                            CircularProgressIndicator()
+
+                            Text(
+                                text = "Verifying app...",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
 
                         DownloadStage.INSTALLING -> {
-                            CircularProgressIndicator(/* small */)
-                            Text("Installing...")
+                            CircularProgressIndicator()
+
+                            Text(
+                                text = "Installing...",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
 
-                        DownloadStage.IDLE -> { }
+                        DownloadStage.IDLE -> {}
                     }
                 }
             } else {
                 Text(
-                    text = if (primaryAsset != null) "Install" else "Not Available",
+                    text = if (primaryAsset != null) {
+                        "Install latest"
+                    } else "Not Available",
                     color = if (enabled) {
                         MaterialTheme.colorScheme.onPrimary
                     } else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),

@@ -19,7 +19,6 @@ data class DetailsState(
 
     val installLogs: List<InstallLogItem> = emptyList(),
 
-    // In-app download/install status
     val isDownloading: Boolean = false,
     val downloadProgressPercent: Int? = null,
     val isInstalling: Boolean = false,
@@ -34,9 +33,9 @@ data class InstallLogItem(
     val assetName: String,
     val assetSizeBytes: Long,
     val releaseTag: String,
-    val result: String // Started, Success, Error: message
+    val result: String
 )
 
 enum class DownloadStage {
-    IDLE, PREPARING, DOWNLOADING, VERIFYING, INSTALLING
+    IDLE, DOWNLOADING, VERIFYING, INSTALLING
 }

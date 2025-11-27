@@ -1,5 +1,7 @@
 package zed.rainxch.githubstore.core.presentation.theme
 
+import androidx.compose.material3.ColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF2A638A)
@@ -219,7 +221,8 @@ val surfaceContainerHighDarkHighContrast = Color(0xFF383C40)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF43474B)
 
 
-
+val ColorScheme.warning get() = Color(0xffFFFF00)
+val ColorScheme.success get() = Color(0xff008000)
 
 
 

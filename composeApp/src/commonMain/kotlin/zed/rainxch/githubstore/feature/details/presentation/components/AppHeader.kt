@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.CallSplit
@@ -19,10 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
+import zed.rainxch.githubstore.core.presentation.theme.success
+import zed.rainxch.githubstore.core.presentation.theme.warning
 import zed.rainxch.githubstore.feature.details.domain.model.RepoStats
 
 @Composable
@@ -31,50 +35,62 @@ fun AppHeader(
     stats: RepoStats?,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.Top) {
-            // Avatar / Icon
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
             AsyncImage(
                 model = repo.owner.avatarUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
                     .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outlineVariant,
-                        RoundedCornerShape(16.dp)
-                    )
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = CircleShape
+                    ),
+                contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(Modifier.width(16.dp))
 
             Column {
                 Text(
                     text = repo.name,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+
                 Text(
                     text = "by ${repo.owner.login}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Badge(icon = Icons.Rounded.Star, text = stats?.stars?.toString() ?: "-")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Badge(
+                        icon = Icons.Rounded.Star,
+                        text = stats?.stars?.toString() ?: "-",
+                    )
 
                     Badge(
                         icon = Icons.AutoMirrored.Rounded.CallSplit,
-                        text = stats?.forks?.toString() ?: "-"
+                        text = stats?.forks?.toString() ?: "-",
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
         Text(
             text = repo.description ?: "No description provided.",
