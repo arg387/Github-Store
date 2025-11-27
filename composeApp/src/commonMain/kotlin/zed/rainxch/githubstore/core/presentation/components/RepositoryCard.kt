@@ -68,7 +68,11 @@ fun RepositoryCard(
                 Text(
                     text = "/ ${repository.name}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.outline,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
