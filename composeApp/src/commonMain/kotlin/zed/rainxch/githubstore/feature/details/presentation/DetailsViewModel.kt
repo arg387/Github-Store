@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -15,12 +17,12 @@ import kotlinx.datetime.format.char
 import kotlinx.datetime.toLocalDateTime
 import zed.rainxch.githubstore.core.domain.model.GithubAsset
 import zed.rainxch.githubstore.core.presentation.utils.openBrowser
+import zed.rainxch.githubstore.feature.details.data.Downloader
+import zed.rainxch.githubstore.feature.details.data.Installer
 import zed.rainxch.githubstore.feature.details.domain.repository.DetailsRepository
 import zed.rainxch.githubstore.feature.home.data.repository.PlatformType
 import zed.rainxch.githubstore.feature.home.data.repository.getPlatform
-import zed.rainxch.githubstore.feature.details.data.Downloader
-import zed.rainxch.githubstore.feature.details.data.Installer
-import kotlin.time.Clock.*
+import kotlin.time.Clock.System
 import kotlin.time.ExperimentalTime
 
 class DetailsViewModel(
@@ -34,39 +36,59 @@ class DetailsViewModel(
     private var currentDownloadJob: Job? = null
 
     private val _state = MutableStateFlow(DetailsState())
-    val state = _state.asStateFlow()
+    val state = _state
+        .onStart {
+            if (!hasLoadedInitialData) {
+                loadInitial()
+
+                hasLoadedInitialData = true
+            }
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            DetailsState()
+        )
 
     private fun loadInitial() {
-        if (hasLoadedInitialData) return
-        hasLoadedInitialData = true
-
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
                 val repo = detailsRepository.getRepositoryById(repositoryId.toLong())
-
                 val owner = repo.owner.login
                 val name = repo.name
 
-                val latestRelease = try {
-                    detailsRepository.getLatestPublishedRelease(owner, name)
-                } catch (t: Throwable) {
-                    Logger.w { "Failed to load latest release: ${t.message}" }
-                    null
+                _state.value = _state.value.copy(repository = repo)
+
+                val latestReleaseDeferred = async {
+                    try {
+                        detailsRepository.getLatestPublishedRelease(owner, name)
+                    } catch (t: Throwable) {
+                        Logger.w { "Failed to load latest release: ${t.message}" }
+                        null
+                    }
                 }
 
-                val stats = try {
-                    detailsRepository.getRepoStats(owner, name)
-                } catch (t: Throwable) {
-                    null
+                val statsDeferred = async {
+                    try {
+                        detailsRepository.getRepoStats(owner, name)
+                    } catch (t: Throwable) {
+                        null
+                    }
                 }
 
-                val readme = try {
-                    detailsRepository.getReadme(owner, name)
-                } catch (t: Throwable) {
-                    null
+                val readmeDeferred = async {
+                    try {
+                        detailsRepository.getReadme(owner, name)
+                    } catch (t: Throwable) {
+                        null
+                    }
                 }
+
+                val latestRelease = latestReleaseDeferred.await()
+                val stats = statsDeferred.await()
+                val readme = readmeDeferred.await()
 
                 val platformType = getPlatform().type
                 val installable = latestRelease?.assets?.filter { asset ->
@@ -122,7 +144,6 @@ class DetailsViewModel(
             val name = asset.name.lowercase()
             val idx = priority.indexOfFirst { name.endsWith(it) }
                 .let { if (it == -1) 999 else it }
-            // Prefer earlier in priority (lower idx); tie-breaker by size desc
             -1000 * (priority.size - idx) + asset.size
         }
     }
@@ -194,7 +215,7 @@ class DetailsViewModel(
                     downloadProgressPercent = null
                 )
 
-                installer.ensurePermissionsOrThrow(assetName.substringAfterLast('.', "").lowercase())  // Early check
+                installer.ensurePermissionsOrThrow(assetName.substringAfterLast('.', "").lowercase())
 
                 _state.value = _state.value.copy(downloadStage = DownloadStage.DOWNLOADING)
 
@@ -301,7 +322,5 @@ class DetailsViewModel(
         currentDownloadJob?.cancel()
     }
 
-    init {
-        loadInitial()
-    }
+
 }
