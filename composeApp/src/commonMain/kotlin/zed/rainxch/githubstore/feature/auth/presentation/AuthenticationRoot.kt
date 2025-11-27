@@ -45,7 +45,7 @@ import zed.rainxch.githubstore.feature.auth.data.copyToClipboard
 import zed.rainxch.githubstore.core.presentation.utils.openBrowser
 import zed.rainxch.githubstore.core.presentation.utils.ObserveAsEvents
 import zed.rainxch.githubstore.core.presentation.theme.GithubStoreTheme
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
 
 @Composable
 fun AuthenticationRoot(

@@ -26,8 +26,12 @@ import zed.rainxch.githubstore.feature.search.domain.repository.SearchRepository
 import zed.rainxch.githubstore.feature.search.presentation.SearchViewModel
 
 val coreModule: Module = module {
-    single<TokenDataSource> { DefaultTokenDataSource() }
-    // Authed GitHub client that reads token snapshot from TokenDataSource on every request
+    single<TokenDataSource> {
+        DefaultTokenDataSource(
+            tokenStore = get()
+        )
+    }
+
     single { buildAuthedGitHubHttpClient(get()) }
 
     viewModelOf(::MainViewModel)
@@ -36,13 +40,11 @@ val coreModule: Module = module {
 val authModule: Module = module {
     single<AuthRepository> { AuthRepositoryImpl(tokenDataSource = get()) }
 
-    // Use cases
     factory { StartDeviceFlowUseCase(get()) }
     factory { AwaitDeviceTokenUseCase(get()) }
     factory { ObserveAccessTokenUseCase(get()) }
     factory { LogoutUseCase(get()) }
 
-    // Presentation
     viewModel { AuthenticationViewModel(get(), get(), get(), get()) }
 }
 
@@ -54,7 +56,6 @@ val homeModule: Module = module {
         )
     }
 
-    // Presentation
     viewModel { HomeViewModel(get(), get()) }
 }
 
@@ -65,7 +66,6 @@ val searchModule: Module = module {
         )
     }
 
-    // Presentation
     viewModel { SearchViewModel(get()) }
 }
 
@@ -74,7 +74,6 @@ val detailsModule: Module = module {
         DetailsRepositoryImpl(github = get())
     }
 
-    // Presentation
     viewModel { params ->
         DetailsViewModel(
             repositoryId = params.get(),

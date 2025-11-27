@@ -1,8 +1,8 @@
 package zed.rainxch.githubstore.feature.auth.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
-import zed.rainxch.githubstore.feature.auth.data.DeviceTokenSuccess
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
 
 /**
  * Clean-architecture Auth contract for the domain layer.

@@ -20,7 +20,7 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
-            val initialToken = tokenDataSource.load()
+            val initialToken = tokenDataSource.reloadFromStore()
             _state.update {
                 it.copy(
                     isCheckingAuth = false,

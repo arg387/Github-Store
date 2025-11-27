@@ -1,4 +1,4 @@
-package zed.rainxch.githubstore.feature.auth.data
+package zed.rainxch.githubstore.core.domain.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

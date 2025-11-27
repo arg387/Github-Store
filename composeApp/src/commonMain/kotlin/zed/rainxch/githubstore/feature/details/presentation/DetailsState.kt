@@ -3,7 +3,7 @@ package zed.rainxch.githubstore.feature.details.presentation
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
 import zed.rainxch.githubstore.core.domain.model.GithubRelease
 import zed.rainxch.githubstore.core.domain.model.GithubAsset
-import zed.rainxch.githubstore.feature.details.domain.repository.RepoStats
+import zed.rainxch.githubstore.feature.details.domain.model.RepoStats
 
 data class DetailsState(
     val isLoading: Boolean = true,

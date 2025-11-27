@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
-import zed.rainxch.githubstore.feature.details.domain.repository.RepoStats
+import zed.rainxch.githubstore.feature.details.domain.model.RepoStats
 
 @Composable
 fun AppHeader(

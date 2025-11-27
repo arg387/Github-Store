@@ -2,6 +2,8 @@ package zed.rainxch.githubstore.app.di
 
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import zed.rainxch.githubstore.feature.auth.data.DesktopTokenStore
+import zed.rainxch.githubstore.feature.auth.data.TokenStore
 import zed.rainxch.githubstore.feature.home.data.repository.getPlatform
 import zed.rainxch.githubstore.feature.details.data.Downloader
 import zed.rainxch.githubstore.feature.details.data.FileLocationsProvider
@@ -29,5 +31,9 @@ actual val platformModule: Module = module {
     single<FileLocationsProvider> {
         val platform = getPlatform()
         DesktopFileLocationsProvider(platform = platform.type)
+    }
+
+    single<TokenStore> {
+        DesktopTokenStore()
     }
 }

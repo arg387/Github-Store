@@ -1,6 +1,6 @@
 package zed.rainxch.githubstore.feature.auth.presentation
 
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
 
 sealed interface AuthenticationAction {
     data class StartLogin(val scope: String) : AuthenticationAction

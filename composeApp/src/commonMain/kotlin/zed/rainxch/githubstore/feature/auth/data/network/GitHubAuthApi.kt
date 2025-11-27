@@ -1,6 +1,7 @@
-package zed.rainxch.githubstore.feature.auth.data
+package zed.rainxch.githubstore.feature.auth.data.network
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.accept
@@ -15,6 +16,9 @@ import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenError
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
 
 object GitHubAuthApi {
     private val json = Json { ignoreUnknownKeys = true }
@@ -32,7 +36,7 @@ object GitHubAuthApi {
             contentType(ContentType.Application.FormUrlEncoded)
             setBody(
                 FormDataContent(
-                    Parameters.build {
+                    Parameters.Companion.build {
                         append("client_id", clientId)
                         append("scope", scope)
                     }
@@ -41,7 +45,7 @@ object GitHubAuthApi {
         }
         val status = res.status
         val text = res.bodyAsText()
-        if (status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
+        if (status !in HttpStatusCode.Companion.OK..HttpStatusCode.Companion.MultipleChoices) {
             error(
                 buildString {
                     append("GitHub device/code HTTP ")
@@ -77,7 +81,7 @@ object GitHubAuthApi {
             contentType(ContentType.Application.FormUrlEncoded)
             setBody(
                 FormDataContent(
-                    Parameters.build {
+                    Parameters.Companion.build {
                         append("client_id", clientId)
                         append("device_code", deviceCode)
                         append("grant_type", "urn:ietf:params:oauth:grant-type:device_code")
@@ -87,7 +91,7 @@ object GitHubAuthApi {
         }
         val status = res.status
         val text = res.body<String>()
-        if (status !in HttpStatusCode.OK..HttpStatusCode.MultipleChoices) {
+        if (status !in HttpStatusCode.Companion.OK..HttpStatusCode.Companion.MultipleChoices) {
             return Result.failure(IllegalStateException("GitHub access_token HTTP ${'$'}{status.value} ${'$'}{status.description}. Body: ${'$'}{text.take(300)}"))
         }
         return try {

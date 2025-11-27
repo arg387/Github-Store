@@ -52,7 +52,7 @@ import zed.rainxch.githubstore.core.presentation.components.RepositoryCard
 import zed.rainxch.githubstore.core.presentation.theme.GithubStoreTheme
 import zed.rainxch.githubstore.feature.search.domain.model.SearchPlatformType
 import zed.rainxch.githubstore.feature.search.domain.model.SortBy
-import zed.rainxch.githubstore.feature.search.presentation.presentation.SortByBottomSheet
+import zed.rainxch.githubstore.feature.search.presentation.components.SortByBottomSheet
 
 @Composable
 fun SearchRoot(

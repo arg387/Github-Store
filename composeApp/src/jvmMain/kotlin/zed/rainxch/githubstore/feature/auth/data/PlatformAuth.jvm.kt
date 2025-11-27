@@ -1,6 +1,7 @@
 package zed.rainxch.githubstore.feature.auth.data
 
 import kotlinx.serialization.json.Json
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.util.prefs.Preferences
@@ -44,18 +45,18 @@ actual fun copyToClipboard(label: String, text: String): Boolean {
     } catch (_: Throwable) { false }
 }
 
-actual object DefaultTokenStore : TokenStore {
+class DesktopTokenStore : TokenStore {
     private val prefs: Preferences = Preferences.userRoot().node("zed.rainxch.githubstore")
     private val json = Json { ignoreUnknownKeys = true }
 
-    actual override suspend fun save(token: DeviceTokenSuccess) {
+    override suspend fun save(token: DeviceTokenSuccess) {
         prefs.put("token", json.encodeToString(DeviceTokenSuccess.serializer(), token))
     }
 
-    actual override suspend fun load(): DeviceTokenSuccess? {
+    override suspend fun load(): DeviceTokenSuccess? {
         val raw = prefs.get("token", null) ?: return null
         return runCatching { json.decodeFromString(DeviceTokenSuccess.serializer(), raw) }.getOrNull()
     }
 
-    actual override suspend fun clear() { prefs.remove("token") }
+    override suspend fun clear() { prefs.remove("token") }
 }

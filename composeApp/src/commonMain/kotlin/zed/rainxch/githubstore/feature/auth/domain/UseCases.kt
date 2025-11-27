@@ -1,8 +1,8 @@
 package zed.rainxch.githubstore.feature.auth.domain
 
 import kotlinx.coroutines.flow.Flow
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
-import zed.rainxch.githubstore.feature.auth.data.DeviceTokenSuccess
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
 import zed.rainxch.githubstore.feature.auth.domain.repository.AuthRepository
 
 class StartDeviceFlowUseCase(private val repo: AuthRepository) {

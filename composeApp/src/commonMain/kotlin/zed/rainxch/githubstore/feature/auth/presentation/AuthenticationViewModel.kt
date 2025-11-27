@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
 import zed.rainxch.githubstore.feature.auth.domain.AwaitDeviceTokenUseCase
 import zed.rainxch.githubstore.feature.auth.domain.LogoutUseCase
 import zed.rainxch.githubstore.feature.auth.domain.ObserveAccessTokenUseCase

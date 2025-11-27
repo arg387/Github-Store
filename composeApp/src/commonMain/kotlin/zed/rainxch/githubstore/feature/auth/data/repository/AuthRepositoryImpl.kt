@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import zed.rainxch.githubstore.core.data.TokenDataSource
-import zed.rainxch.githubstore.feature.auth.data.DeviceStart
-import zed.rainxch.githubstore.feature.auth.data.DeviceTokenSuccess
-import zed.rainxch.githubstore.feature.auth.data.GitHubAuthApi
+import zed.rainxch.githubstore.core.domain.model.DeviceStart
+import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
+import zed.rainxch.githubstore.feature.auth.data.network.GitHubAuthApi
 import zed.rainxch.githubstore.feature.auth.data.getGithubClientId
 import zed.rainxch.githubstore.feature.auth.domain.repository.AuthRepository
 

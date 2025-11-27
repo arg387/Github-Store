@@ -12,8 +12,8 @@ import zed.rainxch.githubstore.core.domain.model.GithubAsset
 import zed.rainxch.githubstore.core.domain.model.GithubRelease
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
 import zed.rainxch.githubstore.core.domain.model.GithubUser
+import zed.rainxch.githubstore.feature.details.domain.model.RepoStats
 import zed.rainxch.githubstore.feature.details.domain.repository.DetailsRepository
-import zed.rainxch.githubstore.feature.details.domain.repository.RepoStats
 
 class DetailsRepositoryImpl(
     private val github: HttpClient
