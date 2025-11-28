@@ -51,7 +51,7 @@ fun DetailsRoot(
                 }
 
                 is DetailsAction.OpenAuthorInApp -> {
-
+                    // TODO will be implemented in future
                 }
 
                 else -> {
