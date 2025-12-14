@@ -19,6 +19,7 @@ import com.mikepenz.markdown.compose.Markdown
 import io.github.fletchmckee.liquid.liquefiable
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import zed.rainxch.githubstore.feature.details.presentation.utils.LocalTopbarLiquidState
+import zed.rainxch.githubstore.feature.details.presentation.utils.MarkdownImageTransformer
 import zed.rainxch.githubstore.feature.details.presentation.utils.rememberMarkdownColors
 import zed.rainxch.githubstore.feature.details.presentation.utils.rememberMarkdownTypography
 
@@ -57,7 +58,7 @@ fun LazyListScope.about(readmeMarkdown: String) {
                 colors = colors,
                 typography = typography,
                 flavour = flavour,
-                imageTransformer = Coil3ImageTransformerImpl,
+                imageTransformer = MarkdownImageTransformer,
                 modifier = Modifier
                     .fillMaxWidth()
                     .liquefiable(liquidState),
