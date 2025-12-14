@@ -70,7 +70,11 @@ class DetailsViewModel(
 
                 val latestReleaseDeferred = async {
                     try {
-                        detailsRepository.getLatestPublishedRelease(owner, name)
+                        detailsRepository.getLatestPublishedRelease(
+                            owner = owner,
+                            repo = name,
+                            defaultBranch = repo.defaultBranch
+                        )
                     } catch (t: Throwable) {
                         Logger.w { "Failed to load latest release: ${t.message}" }
                         null
@@ -87,7 +91,11 @@ class DetailsViewModel(
 
                 val readmeDeferred = async {
                     try {
-                        detailsRepository.getReadme(owner, name)
+                        detailsRepository.getReadme(
+                            owner = owner,
+                            repo = name,
+                            defaultBranch = repo.defaultBranch
+                        )
                     } catch (t: Throwable) {
                         null
                     }
@@ -109,7 +117,6 @@ class DetailsViewModel(
                 val readme = readmeDeferred.await()
                 val userProfile = userProfileDeferred.await()
 
-                // Get installable assets from installer (platform-specific logic)
                 val installable = latestRelease?.assets?.filter { asset ->
                     installer.isAssetInstallable(asset.name)
                 }.orEmpty()
@@ -254,7 +261,6 @@ class DetailsViewModel(
 
                 _state.value = _state.value.copy(downloadStage = DownloadStage.DOWNLOADING)
 
-                // Download with progress tracking
                 var filePath: String? = null
                 downloader.download(downloadUrl, assetName).collect { p ->
                     _state.value = _state.value.copy(downloadProgressPercent = p.percent)
@@ -263,7 +269,6 @@ class DetailsViewModel(
                     }
                 }
 
-                // Get the file path (file is already downloaded by the flow above)
                 filePath = downloader.getDownloadedFilePath(assetName)
                     ?: throw IllegalStateException("Downloaded file not found")
 
