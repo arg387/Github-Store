@@ -53,7 +53,7 @@ clean, app‑store style experience:
 
 <a href="https://f-droid.org/en/packages/zed.rainxch.githubstore/">
    <image src="https://f-droid.org/badge/get-it-on.png" height="80"/>
- </a
+   </a>
    
 > [!IMPORTANT]
 > On macOS, you may see a warning that Apple cannot verify Github Store is free of malware. This
