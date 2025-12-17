@@ -19,4 +19,10 @@ interface Installer {
         repoName: String,
         onOpenInstaller: () -> Unit
     )
+
+    fun isAppManagerInstalled(): Boolean
+    fun openInAppManager(
+        filePath: String,
+        onOpenInstaller: () -> Unit
+    )
 }

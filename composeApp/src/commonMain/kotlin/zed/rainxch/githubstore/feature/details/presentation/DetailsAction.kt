@@ -10,5 +10,6 @@ sealed interface DetailsAction {
     data object OpenAuthorInBrowser : DetailsAction
     data class OpenAuthorInApp(val authorId: Int) : DetailsAction
     data object OpenInObtainium : DetailsAction
+    data object OpenInAppManager : DetailsAction
     data object OnToggleInstallDropdown : DetailsAction
 }

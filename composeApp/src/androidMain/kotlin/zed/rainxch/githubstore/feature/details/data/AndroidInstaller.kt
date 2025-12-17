@@ -179,7 +179,46 @@ class AndroidInstaller(
 
         try {
             context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
+            onOpenInstaller()
+        }
+    }
+
+    override fun isAppManagerInstalled(): Boolean {
+        return try {
+            context.packageManager.getPackageInfo("io.github.muntashirakon.AppManager", 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override fun openInAppManager(
+        filePath: String,
+        onOpenInstaller: () -> Unit
+    ) {
+        val file = File(filePath)
+
+        if (!file.exists()) {
+            throw IllegalStateException("APK file not found: $filePath")
+        }
+
+        Logger.d { "Opening APK in AppManager: $filePath" }
+
+        val authority = "${context.packageName}.fileprovider"
+        val fileUri: Uri = FileProvider.getUriForFile(context, authority, file)
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(fileUri, "application/vnd.android.package-archive")
+            setPackage("io.github.muntashirakon.AppManager")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            context.startActivity(intent)
+            Logger.d { "APK opened in AppManager" }
+        } catch (_: ActivityNotFoundException) {
             onOpenInstaller()
         }
     }

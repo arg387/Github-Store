@@ -2,10 +2,13 @@ package zed.rainxch.githubstore.feature.details.presentation.components.sections
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -62,7 +65,7 @@ fun LazyListScope.header(
                 onDismissRequest = {
                     onAction(DetailsAction.OnToggleInstallDropdown)
                 },
-                offset = DpOffset(x = 0.dp, y = 20.dp)
+                offset = DpOffset(x = 0.dp, y = 20.dp),
             ) {
                 DropdownMenuItem(
                     text = {
@@ -85,6 +88,36 @@ fun LazyListScope.header(
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Update,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    modifier = Modifier.liquefiable(liquidState)
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text = "Inspect with AppManager",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Check permissions, trackers & security",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = {
+                        onAction(DetailsAction.OpenInAppManager)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Security,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )

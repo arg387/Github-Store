@@ -32,6 +32,18 @@ class DesktopInstaller(
     }
 
     override fun openInObtainium(repoOwner: String, repoName: String, onOpenInstaller: () -> Unit) {
+        // No-op
+    }
+
+    override fun isAppManagerInstalled(): Boolean {
+        return false
+    }
+
+    override fun openInAppManager(
+        filePath: String,
+        onOpenInstaller: () -> Unit
+    ) {
+        // No-op
     }
 
     override fun isAssetInstallable(assetName: String): Boolean {
@@ -133,15 +145,25 @@ class DesktopInstaller(
 
                 // Check for Debian-based distributions
                 if (id in listOf("debian", "ubuntu", "linuxmint", "pop", "elementary") ||
-                    idLike.contains("debian") || idLike.contains("ubuntu")) {
+                    idLike.contains("debian") || idLike.contains("ubuntu")
+                ) {
                     Logger.d { "Detected Debian-based distribution: $id" }
                     return LinuxPackageType.DEB
                 }
 
                 // Check for RPM-based distributions
-                if (id in listOf("fedora", "rhel", "centos", "rocky", "almalinux", "opensuse", "suse") ||
+                if (id in listOf(
+                        "fedora",
+                        "rhel",
+                        "centos",
+                        "rocky",
+                        "almalinux",
+                        "opensuse",
+                        "suse"
+                    ) ||
                     idLike.contains("fedora") || idLike.contains("rhel") ||
-                    idLike.contains("suse") || idLike.contains("centos")) {
+                    idLike.contains("suse") || idLike.contains("centos")
+                ) {
                     Logger.d { "Detected RPM-based distribution: $id" }
                     return LinuxPackageType.RPM
                 }
@@ -269,7 +291,10 @@ class DesktopInstaller(
     private fun isExactArchitectureMatch(assetName: String, systemArch: Architecture): Boolean {
         val name = assetName.lowercase()
         return when (systemArch) {
-            Architecture.X86_64 -> name.contains("x86_64") || name.contains("amd64") || name.contains("x64")
+            Architecture.X86_64 -> name.contains("x86_64") || name.contains("amd64") || name.contains(
+                "x64"
+            )
+
             Architecture.AARCH64 -> name.contains("aarch64") || name.contains("arm64")
             Architecture.X86 -> name.contains("i386") || name.contains("i686")
             Architecture.ARM -> name.contains("armv7") || name.contains("arm")
@@ -648,7 +673,10 @@ class DesktopInstaller(
 
         val availableTerminals = detectAvailableTerminals()
         if (availableTerminals.isEmpty()) {
-            tryShowNotification("Installation Required", "Please install manually using your file manager")
+            tryShowNotification(
+                "Installation Required",
+                "Please install manually using your file manager"
+            )
             tryCopyToClipboard("sudo dpkg -i '$filePath' && sudo apt-get install -f -y")
             throw IOException("No terminal emulator found.")
         }
@@ -676,7 +704,10 @@ class DesktopInstaller(
 
         val availableTerminals = detectAvailableTerminals()
         if (availableTerminals.isEmpty()) {
-            tryShowNotification("Installation Required", "Please install manually using your file manager")
+            tryShowNotification(
+                "Installation Required",
+                "Please install manually using your file manager"
+            )
             tryCopyToClipboard("sudo dnf install -y --nogpgcheck '$filePath'")
             throw IOException("No terminal emulator found.")
         }
@@ -692,24 +723,31 @@ class DesktopInstaller(
                     LinuxTerminal.GNOME_TERMINAL -> ProcessBuilder(
                         "gnome-terminal", "--", "bash", "-c", command
                     )
+
                     LinuxTerminal.KONSOLE -> ProcessBuilder(
                         "konsole", "-e", "bash", "-c", command
                     )
+
                     LinuxTerminal.XTERM -> ProcessBuilder(
                         "xterm", "-e", "bash", "-c", command
                     )
+
                     LinuxTerminal.XFCE4_TERMINAL -> ProcessBuilder(
                         "xfce4-terminal", "-e", "bash -c \"$command\""
                     )
+
                     LinuxTerminal.ALACRITTY -> ProcessBuilder(
                         "alacritty", "-e", "bash", "-c", command
                     )
+
                     LinuxTerminal.KITTY -> ProcessBuilder(
                         "kitty", "bash", "-c", command
                     )
+
                     LinuxTerminal.TILIX -> ProcessBuilder(
                         "tilix", "-e", "bash -c \"$command\""
                     )
+
                     LinuxTerminal.MATE_TERMINAL -> ProcessBuilder(
                         "mate-terminal", "-e", "bash -c \"$command\""
                     )

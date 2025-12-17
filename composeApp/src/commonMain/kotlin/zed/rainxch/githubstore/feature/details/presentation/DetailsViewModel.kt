@@ -44,7 +44,6 @@ class DetailsViewModel(
         .onStart {
             if (!hasLoadedInitialData) {
                 loadInitial()
-
                 hasLoadedInitialData = true
             }
         }
@@ -111,6 +110,7 @@ class DetailsViewModel(
                 }
 
                 val isObtainiumEnabled = platform.type == PlatformType.ANDROID
+                val isAppManagerEnabled = platform.type == PlatformType.ANDROID
 
                 val latestRelease = latestReleaseDeferred.await()
                 val stats = statsDeferred.await()
@@ -124,6 +124,9 @@ class DetailsViewModel(
                 val primary = installer.choosePrimaryAsset(installable)
 
                 val isObtainiumAvailable = installer.isObtainiumInstalled()
+                val isAppManagerAvailable = installer.isAppManagerInstalled()
+
+                println(repo.id)
 
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -137,7 +140,9 @@ class DetailsViewModel(
                     userProfile = userProfile,
                     systemArchitecture = installer.detectSystemArchitecture(),
                     isObtainiumAvailable = isObtainiumAvailable,
-                    isObtainiumEnabled = isObtainiumEnabled
+                    isObtainiumEnabled = isObtainiumEnabled,
+                    isAppManagerAvailable = isAppManagerAvailable,
+                    isAppManagerEnabled = isAppManagerEnabled
                 )
             } catch (t: Throwable) {
                 Logger.e { "Details load failed: ${t.message}" }
@@ -214,12 +219,85 @@ class DetailsViewModel(
                             }
                         }
                     )
-
                 }
                 _state.update {
-                    it.copy(
-                        isInstallDropdownExpanded = false
-                    )
+                    it.copy(isInstallDropdownExpanded = false)
+                }
+            }
+
+            DetailsAction.OpenInAppManager -> {
+                viewModelScope.launch {
+                    try {
+                        val primary = _state.value.primaryAsset
+                        val release = _state.value.latestRelease
+
+                        if (primary != null && release != null) {
+                            appendLog(
+                                primary.name,
+                                primary.size,
+                                release.tagName,
+                                "Preparing for AppManager"
+                            )
+
+                            _state.value = _state.value.copy(
+                                downloadError = null,
+                                installError = null,
+                                downloadProgressPercent = null,
+                                downloadStage = DownloadStage.DOWNLOADING
+                            )
+                            downloader.download(primary.downloadUrl, primary.name).collect { p ->
+                                _state.value =
+                                    _state.value.copy(downloadProgressPercent = p.percent)
+                                if (p.percent == 100) {
+                                    _state.value =
+                                        _state.value.copy(downloadStage = DownloadStage.VERIFYING)
+                                }
+                            }
+
+                            val filePath = downloader.getDownloadedFilePath(primary.name)
+                                ?: throw IllegalStateException("Downloaded file not found")
+
+                            appendLog(primary.name, primary.size, release.tagName, "Downloaded")
+
+                            _state.value = _state.value.copy(downloadStage = DownloadStage.IDLE)
+                            installer.openInAppManager(
+                                filePath = filePath,
+                                onOpenInstaller = {
+                                    viewModelScope.launch {
+                                        _events.send(
+                                            DetailsEvent.OnOpenRepositoryInApp(APP_MANAGER_REPO_ID)
+                                        )
+                                    }
+                                }
+                            )
+
+                            appendLog(
+                                assetName = primary.name,
+                                size = primary.size,
+                                tag = release.tagName,
+                                result = "Opened in AppManager"
+                            )
+                        }
+                    } catch (t: Throwable) {
+                        Logger.e { "Failed to open in AppManager: ${t.message}" }
+                        _state.value = _state.value.copy(
+                            downloadStage = DownloadStage.IDLE,
+                            installError = t.message
+                        )
+                        _state.value.primaryAsset?.let { asset ->
+                            _state.value.latestRelease?.let { release ->
+                                appendLog(
+                                    asset.name,
+                                    asset.size,
+                                    release.tagName,
+                                    "Error: ${t.message}"
+                                )
+                            }
+                        }
+                    }
+                }
+                _state.update {
+                    it.copy(isInstallDropdownExpanded = false)
                 }
             }
 
@@ -231,9 +309,7 @@ class DetailsViewModel(
 
             DetailsAction.OnToggleInstallDropdown -> {
                 _state.update {
-                    it.copy(
-                        isInstallDropdownExpanded = !it.isInstallDropdownExpanded
-                    )
+                    it.copy(isInstallDropdownExpanded = !it.isInstallDropdownExpanded)
                 }
             }
         }
@@ -364,8 +440,8 @@ class DetailsViewModel(
         currentDownloadJob?.cancel()
     }
 
-
     private companion object {
         const val OBTAINIUM_REPO_ID = 523534328
+        const val APP_MANAGER_REPO_ID = 268006778
     }
 }

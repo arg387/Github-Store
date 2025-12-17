@@ -35,6 +35,9 @@ data class DetailsState(
     val isObtainiumEnabled: Boolean = false,
 
     val isInstallDropdownExpanded: Boolean = false,
+
+    val isAppManagerAvailable: Boolean = false,
+    val isAppManagerEnabled: Boolean = false,
 )
 
 data class InstallLogItem(
