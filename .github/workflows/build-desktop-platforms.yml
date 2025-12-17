@@ -87,10 +87,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Linux installers (DEB & RPM)
+      - name: Build Linux installers (DEB, RPM & AppImage)
         run: |
           ./gradlew :composeApp:packageDeb
           ./gradlew :composeApp:packageRpm
+          ./gradlew :composeApp:packageAppImage
 
       - name: Upload Linux installers
         uses: actions/upload-artifact@v4
@@ -99,4 +100,5 @@ jobs:
           path: |
             composeApp/build/compose/binaries/main/deb/*.deb
             composeApp/build/compose/binaries/main/rpm/*.rpm
+            composeApp/build/compose/binaries/main/app-image/*.AppImage
           retention-days: 30
