@@ -81,15 +81,13 @@ class InstalledAppsRepositoryImpl(
 
                 val primaryAsset = installer.choosePrimaryAsset(installableAssets)
 
-                var isUpdateAvailable = true // Assume yes if tags differ, but verify with download
-
+                var isUpdateAvailable = true
                 var latestVersionName: String? = null
                 var latestVersionCode: Long? = null
 
                 if (primaryAsset != null) {
-                    // Download to temp and parse
                     val tempAssetName = primaryAsset.name + ".tmp"
-                    downloader.download(primaryAsset.downloadUrl, tempAssetName).collect { } // Download fully
+                    downloader.download(primaryAsset.downloadUrl, tempAssetName).collect { }
 
                     val tempPath = downloader.getDownloadedFilePath(tempAssetName)
                     if (tempPath != null) {
@@ -100,8 +98,17 @@ class InstalledAppsRepositoryImpl(
                             latestVersionName = latestInfo.versionName
                             latestVersionCode = latestInfo.versionCode
                             isUpdateAvailable = latestVersionCode > app.installedVersionCode
+                        } else {
+                            isUpdateAvailable = false
+                            latestVersionName = latestRelease.tagName
                         }
+                    } else {
+                        isUpdateAvailable = false
+                        latestVersionName = latestRelease.tagName
                     }
+                } else {
+                    isUpdateAvailable = false
+                    latestVersionName = latestRelease.tagName
                 }
 
                 Logger.d {
