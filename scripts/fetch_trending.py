@@ -205,7 +205,7 @@ def build_query(base_query: str, topics: List[str]) -> str:
 
     return f"{base_query} {topic_query}"
 
-def fetch_trending_repos(platform: str, desired_count: int = 80) -> List[Dict]:
+def fetch_trending_repos(platform: str, desired_count: int = 50) -> List[Dict]:
     """Fetch trending repositories for a specific platform"""
     print(f"\n{'='*60}")
     print(f"Fetching trending repos for {platform.upper()}")
@@ -341,7 +341,7 @@ def main():
     for platform in PLATFORMS.keys():
         print(f"\nProcessing {platform}...")
 
-        repos = fetch_trending_repos(platform, desired_count=80)
+        repos = fetch_trending_repos(platform, desired_count=50)
 
         output = {
             'platform': platform,
