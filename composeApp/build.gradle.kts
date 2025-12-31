@@ -227,7 +227,7 @@ compose.desktop {
     application {
         mainClass = "zed.rainxch.githubstore.MainKt"
         nativeDistributions {
-            packageName = "github-store"
+            packageName = "GitHub-Store"
             packageVersion = appVersionName
             vendor = "rainxchzed"
             includeAllModules = true
