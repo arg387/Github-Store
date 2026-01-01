@@ -234,13 +234,20 @@ automatically—no manual submission required.
 
 ---
 
-## Find this repository useful? ❤️
+## 💖 Support This Project
 
-Support it by joining the [stargazers](https://github.com/rainxchzed/Github-Store/stargazers). ⭐
+GitHub Store is free and always will be. If it's helped you, consider:
 
-If you want to help even more, please spread the word — share the project on X, Reddit, or with your community so more people discover it.
+<a href="https://github.com/sponsors/rainxchzed">
+  <img src="https://img.shields.io/badge/Sponsor-GitHub-pink?logo=github" alt="Sponsor on GitHub">
+</a>
 
-And [follow me](https://github.com/rainxchzed/) to keep up with future updates and projects. 🤩
+Your support helps me:
+- Maintain the app for 20K+ users
+- Build new features
+- Create more free tools for developers
+
+Can't sponsor? Star the repo and share with others! ⭐
 
 ## Star History
 
