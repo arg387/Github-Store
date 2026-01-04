@@ -141,7 +141,7 @@
     <!-- Navigation & actions -->
     <string name="open_repository">Apri repository</string>
     <string name="open_in_browser">Apri nel browser</string>
-    <string name="cancel_download">Cancella download</string>
+    <string name="cancel_download">Annulla download</string>
     <string name="show_install_options">Mostra opzioni di installazione</string>
 
     <!-- Errors & states -->
