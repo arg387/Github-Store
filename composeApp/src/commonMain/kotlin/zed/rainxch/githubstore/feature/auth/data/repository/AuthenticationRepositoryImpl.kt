@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import zed.rainxch.githubstore.core.data.data_source.TokenDataSource
 import zed.rainxch.githubstore.core.domain.model.DeviceStart
@@ -52,156 +53,202 @@ class AuthenticationRepositoryImpl(
         withContext(Dispatchers.IO) {
             val clientId = getGithubClientId()
             val timeoutMs = start.expiresInSec * 1000L
-            var remainingMs = timeoutMs
+            val startTime = System.currentTimeMillis()
 
             val initialJitter = (0..2000).random().toLong()
             delay(initialJitter)
-            remainingMs -= initialJitter
 
-            var intervalMs = (start.intervalSec.coerceAtLeast(5)) * 1000L
-            var consecutiveErrors = 0
+            var pollingInterval = (start.intervalSec.coerceAtLeast(5)) * 1000L
+            var consecutiveNetworkErrors = 0
+            var consecutiveUnknownErrors = 0
             var slowDownCount = 0
-            val maxConsecutiveErrors = 5
-            val maxSlowDownBeforeGiveUp = 8
 
-            Logger.d { "⏱️ Starting token polling. Expires in: ${start.expiresInSec}s, Interval: ${start.intervalSec}s (jitter: ${initialJitter}ms)" }
+            Logger.d { "⏱️ Polling started. Timeout: ${start.expiresInSec}s, Interval: ${start.intervalSec}s" }
 
-            while (remainingMs > 0) {
+            while (isActive) {
+                if (System.currentTimeMillis() - startTime >= timeoutMs) {
+                    throw CancellationException(
+                        "Authentication timed out after ${start.expiresInSec} seconds. Please try again."
+                    )
+                }
+
                 try {
                     val res = GitHubAuthApi.pollDeviceToken(clientId, start.deviceCode)
                     val success = res.getOrNull()
 
                     if (success != null) {
-                        Logger.d { "✅ Token received successfully!" }
-                        withRetry(maxAttempts = 3) {
-                            tokenDataSource.save(success)
-                        }
+                        Logger.d { "✅ Token received! Saving..." }
+
+                        saveTokenWithVerification(success)
+
+                        Logger.d { "✅ Token saved and verified successfully!" }
                         return@withContext success
                     }
 
                     val error = res.exceptionOrNull()
-                    val msg = (error?.message ?: "").lowercase()
-
-                    Logger.d { "📡 Poll response: $msg (slowdowns: $slowDownCount/$maxSlowDownBeforeGiveUp)" }
+                    val errorMsg = (error?.message ?: "").lowercase()
 
                     when {
-                        "authorization_pending" in msg -> {
-                            consecutiveErrors = 0
-                            slowDownCount = 0
+                        "authorization_pending" in errorMsg -> {
+                            consecutiveNetworkErrors = 0
+                            consecutiveUnknownErrors = 0
+                            if (slowDownCount > 0) slowDownCount--
 
-                            val jitter = (0..500).random().toLong()
-                            val waitTime = intervalMs + jitter
-
-                            delay(waitTime)
-                            remainingMs -= waitTime
+                            Logger.d { "📡 Waiting for user authorization..." }
+                            delay(pollingInterval + (0..1000).random())
                         }
 
-                        "slow_down" in msg -> {
-                            consecutiveErrors = 0
+                        "slow_down" in errorMsg -> {
+                            consecutiveNetworkErrors = 0
+                            consecutiveUnknownErrors = 0
                             slowDownCount++
+                            pollingInterval += 5000
 
-                            intervalMs += 5000
+                            Logger.d { "⚠️ Rate limited. New interval: ${pollingInterval}ms (slowdown #$slowDownCount)" }
 
-                            Logger.d { "⚠️ Rate limited. Slowing to ${intervalMs}ms (slowdown #$slowDownCount)" }
-
-                            if (slowDownCount >= maxSlowDownBeforeGiveUp) {
+                            if (slowDownCount > 10) {
                                 throw Exception(
-                                    "GitHub authentication is experiencing high traffic. " +
-                                            "Please wait 1-2 minutes and try again."
+                                    "GitHub is experiencing high traffic. Please wait a few minutes and try again."
                                 )
                             }
 
-                            val extraJitter = (0..3000).random().toLong()
-                            val waitTime = intervalMs + extraJitter
-
-                            Logger.d { "⏳ Waiting ${waitTime}ms (base: ${intervalMs}ms + jitter: ${extraJitter}ms)" }
-
-                            delay(waitTime)
-                            remainingMs -= waitTime
+                            delay(pollingInterval + (0..3000).random())
                         }
 
-                        "access_denied" in msg -> {
-                            throw CancellationException("You denied access to the app")
-                        }
-
-                        "expired_token" in msg || "expired_device_code" in msg -> {
+                        "access_denied" in errorMsg -> {
                             throw CancellationException(
-                                "Authorization timed out. Please try again."
+                                "Authentication was denied. Please try again if this was a mistake."
                             )
                         }
 
-                        "unable to resolve" in msg ||
-                                "no address" in msg ||
-                                "failed to connect" in msg ||
-                                "connection refused" in msg ||
-                                "network is unreachable" in msg -> {
-                            consecutiveErrors++
-                            Logger.d { "⚠️ Network error, retrying... ($consecutiveErrors/$maxConsecutiveErrors)" }
+                        "expired_token" in errorMsg ||
+                                "expired_device_code" in errorMsg ||
+                                "token_expired" in errorMsg -> {
+                            throw CancellationException(
+                                "Authorization code expired. Please try again."
+                            )
+                        }
 
-                            if (consecutiveErrors >= maxConsecutiveErrors) {
+                        "bad_verification_code" in errorMsg ||
+                                "incorrect_device_code" in errorMsg -> {
+                            throw Exception(
+                                "Invalid verification code. Please restart authentication."
+                            )
+                        }
+
+                        isNetworkError(errorMsg) -> {
+                            consecutiveNetworkErrors++
+                            consecutiveUnknownErrors = 0
+
+                            Logger.d { "⚠️ Network error ($consecutiveNetworkErrors/8): $errorMsg" }
+
+                            if (consecutiveNetworkErrors >= 8) {
                                 throw Exception(
-                                    "Network connection unstable during authentication. " +
-                                            "Please check your connection and try again."
+                                    "Network connection is unstable. Please check your connection and try again."
                                 )
                             }
 
-                            val backoffDelay = intervalMs * (1 + consecutiveErrors)
-                            delay(backoffDelay)
-                            remainingMs -= backoffDelay
+                            val backoff = minOf(
+                                pollingInterval * (1 + consecutiveNetworkErrors),
+                                30_000L
+                            )
+                            delay(backoff)
                         }
 
                         else -> {
-                            consecutiveErrors++
-                            Logger.d { "⚠️ Unknown error: $msg (attempt $consecutiveErrors/$maxConsecutiveErrors)" }
+                            consecutiveUnknownErrors++
+                            Logger.d { "⚠️ Unknown error ($consecutiveUnknownErrors/5): $errorMsg" }
 
-                            if (consecutiveErrors >= maxConsecutiveErrors) {
-                                throw Exception("Authentication failed: $msg")
+                            if (consecutiveUnknownErrors >= 5) {
+                                throw Exception(
+                                    "Authentication failed: ${error?.message ?: "Unknown error"}"
+                                )
                             }
 
-                            val backoffDelay = intervalMs * 2
-                            delay(backoffDelay)
-                            remainingMs -= backoffDelay
+                            val backoff = minOf(
+                                pollingInterval * (1 + consecutiveUnknownErrors / 2),
+                                20_000L
+                            )
+                            delay(backoff)
                         }
                     }
 
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Logger.d { "❌ Poll error: ${e.message}" }
-                    consecutiveErrors++
+                    consecutiveUnknownErrors++
+                    Logger.d { "❌ Unexpected error ($consecutiveUnknownErrors/5): ${e.message}" }
 
-                    if (consecutiveErrors >= maxConsecutiveErrors) {
+                    if (consecutiveUnknownErrors >= 5) {
                         throw Exception(
-                            "Authentication failed after multiple attempts. " +
-                                    "Error: ${e.message}",
+                            "Authentication failed after multiple errors: ${e.message}",
                             e
                         )
                     }
 
-                    val backoffDelay = intervalMs * (1 + consecutiveErrors)
-                    delay(backoffDelay)
-                    remainingMs -= backoffDelay
+                    delay(minOf(pollingInterval * 2, 15_000L))
                 }
             }
 
-            throw CancellationException(
-                "Authentication timed out. Please try again and complete the process faster."
-            )
+            throw CancellationException("Authentication was cancelled")
         }
 
-    private suspend fun <T> withRetry(
-        maxAttempts: Int = 3,
-        initialDelay: Long = 1000,
-        block: suspend () -> T
-    ): T {
-        repeat(maxAttempts - 1) { attempt ->
+    private suspend fun saveTokenWithVerification(token: DeviceTokenSuccess) {
+        repeat(5) { attempt ->
             try {
-                return block()
+                tokenDataSource.save(token)
+
+                delay(100)
+                val saved = tokenDataSource.current()
+
+                if (saved?.accessToken == token.accessToken) {
+                    return
+                } else {
+                    Logger.d { "⚠️ Token verification failed (attempt ${attempt + 1}/5)" }
+                    if (attempt == 4) {
+                        throw Exception("Token was not persisted correctly after 5 attempts")
+                    }
+                }
             } catch (e: Exception) {
-                Logger.d { "⚠️ Retry attempt ${attempt + 1} failed: ${e.message}" }
-                delay(initialDelay * (attempt + 1))
+                Logger.d { "⚠️ Token save failed (attempt ${attempt + 1}/5): ${e.message}" }
+                if (attempt == 4) {
+                    throw Exception("Failed to save authentication token: ${e.message}", e)
+                }
+                delay(500L * (attempt + 1))
             }
         }
-        return block()
     }
+
+    private fun isNetworkError(errorMsg: String): Boolean {
+        return errorMsg.contains("unable to resolve") ||
+                errorMsg.contains("no address") ||
+                errorMsg.contains("failed to connect") ||
+                errorMsg.contains("connection refused") ||
+                errorMsg.contains("network is unreachable") ||
+                errorMsg.contains("timeout") ||
+                errorMsg.contains("timed out") ||
+                errorMsg.contains("connection reset") ||
+                errorMsg.contains("broken pipe") ||
+                errorMsg.contains("host unreachable") ||
+                errorMsg.contains("network error")
+    }
+}
+
+private suspend fun <T> withRetry(
+    maxAttempts: Int = 3,
+    initialDelay: Long = 1000,
+    maxDelay: Long = 5000,
+    block: suspend () -> T
+): T {
+    var currentDelay = initialDelay
+    repeat(maxAttempts - 1) { attempt ->
+        try {
+            return block()
+        } catch (e: Exception) {
+            Logger.d { "⚠️ Retry attempt ${attempt + 1} failed: ${e.message}" }
+            delay(currentDelay)
+            currentDelay = minOf(currentDelay * 2, maxDelay)
+        }
+    }
+    return block()
 }
