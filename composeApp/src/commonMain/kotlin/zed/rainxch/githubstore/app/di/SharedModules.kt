@@ -172,7 +172,8 @@ val homeModule: Module = module {
             homeRepository = get(),
             installedAppsRepository = get(),
             platform = get(),
-            syncInstalledAppsUseCase = get()
+            syncInstalledAppsUseCase = get(),
+            favoritesRepository = get()
         )
     }
 }
@@ -192,7 +193,8 @@ val searchModule: Module = module {
         SearchViewModel(
             searchRepository = get(),
             installedAppsRepository = get(),
-            syncInstalledAppsUseCase = get()
+            syncInstalledAppsUseCase = get(),
+            favoritesRepository = get()
         )
     }
 }

@@ -46,15 +46,14 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
 import zed.rainxch.githubstore.core.domain.model.GithubUser
+import zed.rainxch.githubstore.core.presentation.model.DiscoveryRepository
 import zed.rainxch.githubstore.core.presentation.theme.GithubStoreTheme
 import zed.rainxch.githubstore.core.presentation.utils.formatUpdatedAt
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RepositoryCard(
-    repository: GithubRepoSummary,
-    isInstalled: Boolean,
-    isUpdateAvailable: Boolean,
+    discoveryRepository: DiscoveryRepository,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,7 +76,7 @@ fun RepositoryCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 CoilImage(
-                    imageModel = { repository.owner.avatarUrl },
+                    imageModel = { discoveryRepository.repository.owner.avatarUrl },
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape),
@@ -95,7 +94,7 @@ fun RepositoryCard(
                 )
 
                 Text(
-                    text = repository.owner.login,
+                    text = discoveryRepository.repository.owner.login,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.outline,
                     maxLines = 1,
@@ -104,7 +103,7 @@ fun RepositoryCard(
                 )
 
                 Text(
-                    text = "/ ${repository.name}",
+                    text = "/ ${discoveryRepository.repository.name}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.outline,
                     softWrap = false,
@@ -117,7 +116,7 @@ fun RepositoryCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = repository.name,
+                text = discoveryRepository.repository.name,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -128,7 +127,7 @@ fun RepositoryCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            repository.description?.let {
+            discoveryRepository.repository.description?.let {
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -147,7 +146,7 @@ fun RepositoryCard(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "⭐ ${repository.stargazersCount}",
+                    text = "⭐ ${discoveryRepository.repository.stargazersCount}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -156,7 +155,7 @@ fun RepositoryCard(
                 )
 
                 Text(
-                    text = "• 🌴 ${repository.forksCount}",
+                    text = "• 🌴 ${discoveryRepository.repository.forksCount}",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -164,7 +163,7 @@ fun RepositoryCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                repository.language?.let {
+                discoveryRepository.repository.language?.let {
                     Text(
                         text = "• $it",
                         style = MaterialTheme.typography.titleMedium,
@@ -176,18 +175,18 @@ fun RepositoryCard(
                 }
             }
 
-            if (isInstalled) {
+            if (discoveryRepository.isInstalled) {
                 Spacer(Modifier.height(12.dp))
 
                 InstallStatusBadge(
-                    isUpdateAvailable = isUpdateAvailable
+                    isUpdateAvailable = discoveryRepository.isUpdateAvailable
                 )
             }
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = formatUpdatedAt(repository.updatedAt),
+                text = formatUpdatedAt(discoveryRepository.repository.updatedAt),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.outline,
                 maxLines = 1,
@@ -210,7 +209,7 @@ fun RepositoryCard(
 
                 IconButton(
                     onClick = {
-                        uriHandler.openUri(repository.htmlUrl)
+                        uriHandler.openUri(discoveryRepository.repository.htmlUrl)
                     },
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -288,29 +287,32 @@ fun InstallStatusBadge(
 fun RepositoryCardPreview() {
     GithubStoreTheme {
         RepositoryCard(
-            isInstalled = false,
-            repository = GithubRepoSummary(
-                id = 0L,
-                name = "Hello",
-                fullName = "JIFEOJEF",
-                owner = GithubUser(
+            discoveryRepository = DiscoveryRepository(
+                repository = GithubRepoSummary(
                     id = 0L,
-                    login = "Skydoves",
-                    avatarUrl = "ewfew",
-                    htmlUrl = "grgrre"
+                    name = "Hello",
+                    fullName = "JIFEOJEF",
+                    owner = GithubUser(
+                        id = 0L,
+                        login = "Skydoves",
+                        avatarUrl = "ewfew",
+                        htmlUrl = "grgrre"
+                    ),
+                    description = "Hello wolrd Hello wolrd Hello wolrd Hello wolrd Hello wolrd",
+                    htmlUrl = "",
+                    stargazersCount = 20,
+                    forksCount = 4,
+                    language = "Kotlin",
+                    topics = null,
+                    releasesUrl = "",
+                    updatedAt = "",
+                    defaultBranch = ""
                 ),
-                description = "Hello wolrd Hello wolrd Hello wolrd Hello wolrd Hello wolrd",
-                htmlUrl = "",
-                stargazersCount = 20,
-                forksCount = 4,
-                language = "Kotlin",
-                topics = null,
-                releasesUrl = "",
-                updatedAt = "",
-                defaultBranch = ""
+                isUpdateAvailable = true,
+                isFavourite = true,
+                isInstalled = true
             ),
             onClick = { },
-            isUpdateAvailable = true
         )
     }
 }
